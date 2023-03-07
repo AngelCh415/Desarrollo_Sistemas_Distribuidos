@@ -1,0 +1,2 @@
+Sistema distribuido que verifica si un número es primo
+Lenguaje: Java
