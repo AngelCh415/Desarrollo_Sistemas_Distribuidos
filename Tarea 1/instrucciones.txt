@@ -1,2 +1,3 @@
 Sistema distribuido que verifica si un número es primo
+1) Dados 3 numeros (numero, numero_inicial y numero_final) verificar si entre los rangos de numero_inicialy numero_final existe un numero que divida a numero 
 Lenguaje: Java
