@@ -1,5 +1,5 @@
 Sistema distribuido que verifica si un número es primo
 1) Dados 3 numeros (numero, numero_inicial y numero_final) verificar si entre los rangos de numero_inicialy numero_final existe un numero que divida a numero
-2)
+2) Usando el inciso 3, el Cliente enviara un numero entero al servidorB. El servidorB se conectara 3 veces con 3 rangos distintos al servidorA, si el servidorA regresa 3 veces "NO DIVIDE" el servidorB regresa al cliente "ES PRIMO" en otro caso regresa "NO ES PRIMO"
 3) En un servidorB enviar un numero desde el Cliente y que el Cliente reciba una string del servidorB 
 Lenguaje: Java

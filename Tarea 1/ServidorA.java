@@ -33,11 +33,10 @@ class ManejadorCliente extends Thread {
             boolean divide = false;
             for (int i = numeroInicial; i <= numeroFinal; i++) {
                 if (numero % i == 0) {
-                    divide = true;
+                    divide = true;  
                     break;
                 }
             }
-            
             // enviar respuesta al cliente
             if (divide) {
                 salida.println("DIVIDE");
