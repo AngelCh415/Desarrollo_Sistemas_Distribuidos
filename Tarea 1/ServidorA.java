@@ -3,7 +3,7 @@ import java.net.*;
 
 public class ServidorA {
     public static void main(String[] args) throws IOException {
-        ServerSocket servidor = new ServerSocket(12345); // puerto del servidor
+        ServerSocket servidor = new ServerSocket(8000); // puerto del servidor
         System.out.println("Servidor A en linea");
         while (true) {
             Socket cliente = servidor.accept();
