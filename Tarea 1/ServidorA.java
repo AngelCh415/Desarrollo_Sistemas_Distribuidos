@@ -26,12 +26,12 @@ class ManejadorCliente extends Thread {
             PrintWriter salida = new PrintWriter(new OutputStreamWriter(cliente.getOutputStream()), true);
             
             // recibir los 3 numeros del cliente
-            int numero = Integer.parseInt(entrada.readLine());
-            int numeroInicial = Integer.parseInt(entrada.readLine());
-            int numeroFinal = Integer.parseInt(entrada.readLine());
+            long numero = Long.parseLong(entrada.readLine());
+            long numeroInicial = Long.parseLong(entrada.readLine());
+            long numeroFinal = Long.parseLong(entrada.readLine());
             
             boolean divide = false;
-            for (int i = numeroInicial; i <= numeroFinal; i++) {
+            for (long i = numeroInicial; i <= numeroFinal; i++) {
                 if (numero % i == 0) {
                     divide = true;  
                     break;

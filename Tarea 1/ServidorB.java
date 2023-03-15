@@ -24,12 +24,12 @@ class CadenaCliente extends Thread {
         try {
             BufferedReader entrada = new BufferedReader(new InputStreamReader(cliente.getInputStream()));
             PrintWriter salida = new PrintWriter(new OutputStreamWriter(cliente.getOutputStream()), true);
-            int numero = Integer.parseInt(entrada.readLine());
-            int k = numero/3;
-            int inicio2= k+1;
-            int k2 = k*2;
-            int inicio3 = k2+1;
-            int fin = numero-1;
+            long numero = Long.parseLong(entrada.readLine());
+            long k = numero/3;
+            long inicio2= k+1;
+            long k2 = k*2;
+            long inicio3 = k2+1;
+            long fin = numero-1;
             //Hacemos tres conexiones al servidorA en diferentes ventanas
             Socket servidorA = new Socket("localhost", 8000); // direccion y puerto del servidor
             System.out.println("ServidorB conectado al servidor A");

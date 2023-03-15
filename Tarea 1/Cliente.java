@@ -8,10 +8,10 @@ public class Cliente {
         
         BufferedReader entrada = new BufferedReader(new InputStreamReader(servidor.getInputStream()));
         PrintWriter salida = new PrintWriter(new OutputStreamWriter(servidor.getOutputStream()), true);
-        int numero,numeroInicial,numeroFinal;
+        long numero,numeroInicial,numeroFinal;
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
         System.out.println("Ingrese el numero: ");
-        numero = Integer.parseInt(br.readLine());
+        numero = Long.parseLong(br.readLine());
         /*System.out.println("Ingrese el numero inicial: ");
         numeroInicial = Integer.parseInt(br.readLine());
         System.out.println("Ingrese el numero final: ");
