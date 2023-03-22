@@ -3,6 +3,7 @@ import java.util.Scanner;
 public class MatrixMultiplication {
 public static void main(String[] args) {
     String validar = args[0];
+    //Checksum de N = 12, 375408
     System.out.println("Validar: " + validar);
     if(validar.equals("0")){
         Scanner sc = new Scanner(System.in);
@@ -58,12 +59,6 @@ public static void main(String[] args) {
             } else if (j == 2) {
                 Bj = B3;
             }
-            //Multiplicar Ai y Bj con la funcion multi
-            /*for (int x = 0; x < N/3; x++) {
-                for (int y = 0; y < N/3; y++) {
-                    C[i][j][x][y] = multi(Ai, Bj);
-                }
-            }*/
             for (int x = 0; x < N/3; x++) {
                 for (int y = 0; y < N/3; y++) {
                     C[i][j][x][y] = 0.0;
@@ -125,20 +120,14 @@ public static void printMatrix(double[][] matrix) {
     }
       // Función para calcular el checksum de una matriz
     public static double getChecksum(double[][][][] matrix) {
-        double checksum = 0;
-        for (int i = 0; i < 3; i++) {
-            for (int j = 0; j < 3; j++) {
-                double sum = 0;
-                double c = 0;
-                for (int x = 0; x < matrix[i][j].length; x++) {
-                    for (int y = 0; y < matrix[i][j][0].length; y++) {
-                        double y1 = matrix[i][j][x][y] - c;
-                        double t = sum + y1;
-                        c = (t - sum) - y1;
-                        sum = t;
+        double checksum = 0.0;
+        for (int i = 0; i < matrix.length; i++) {
+            for (int j = 0; j < matrix[0].length; j++) {
+                for (int x = 0; x < matrix[0][0].length; x++) {
+                    for (int y = 0; y < matrix[0][0][0].length; y++) {
+                        checksum += matrix[i][j][x][y];
                     }
                 }
-                checksum += sum * (i*3+j+1);
             }
         }
         return checksum;
