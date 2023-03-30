@@ -7,8 +7,8 @@ import java.util.Scanner;
 
 public class ChatMulticast {
     //Poner chcp 1252 para desplegar los caracteres
-    private static final String MULTICAST_IP = "230.0.0.1"; // dirección IP multicast utilizada
-    private static final int PORT = 4444; // puerto utilizado para la comunicación multicast
+    private static final String MULTICAST_IP = "239.0.0.0"; // dirección IP multicast utilizada
+    private static final int PORT = 50000; // puerto utilizado para la comunicación multicast
     private static final int BUFFER_SIZE = 1024; // tamaño del buffer para los mensajes
 
     public static void main(String[] args) throws IOException {
