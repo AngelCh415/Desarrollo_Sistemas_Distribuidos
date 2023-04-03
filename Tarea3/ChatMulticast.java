@@ -2,13 +2,13 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.Scanner;
 
 public class ChatMulticast {
-    
-    private static final String MULTICAST_IP = "230.0.0.1"; // dirección IP multicast utilizada
-    private static final int PORT = 4444; // puerto utilizado para la comunicación multicast
+    //Poner chcp 1252 para desplegar los caracteres
+    private static final String MULTICAST_IP = "239.0.0.0"; // dirección IP multicast utilizada
+    private static final int PORT = 50000; // puerto utilizado para la comunicación multicast
     private static final int BUFFER_SIZE = 1024; // tamaño del buffer para los mensajes
 
     public static void main(String[] args) throws IOException {
@@ -30,8 +30,8 @@ public class ChatMulticast {
                 byte[] buffer = new byte[BUFFER_SIZE];
                 DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
                 try {
-                    socket.receive(packet);
-                    String message = new String(packet.getData(), Charset.forName(System.console().charset().name())).trim();
+                        socket.receive(packet);
+                    String message = new String(packet.getData(), StandardCharsets.UTF_8).trim();
                     // mostramos el mensaje recibido en pantalla
                     System.out.println(message);
                 } catch (IOException e) {
@@ -42,16 +42,18 @@ public class ChatMulticast {
         receiverThread.start();
 
         // leemos los mensajes que escriba el usuario desde la consola
-        Scanner scanner = new Scanner(System.in);
+        Scanner scanner = new Scanner(System.in, System.console().charset().name());
         while (true) {
             System.out.print("Escribe tu mensaje: ");
+            //Leer el mensaje en UTF-8
             String message = scanner.nextLine();
             // agregamos el nombre de usuario al mensaje
             message = username + ": " + message;
             // creamos el paquete de datos a enviar
-            byte[] buffer = message.getBytes(Charset.forName(System.console().charset().name()));
+            byte[] buffer = message.getBytes(StandardCharsets.UTF_8);
             DatagramPacket packet = new DatagramPacket(buffer, buffer.length, group, PORT);
             socket.send(packet);
+            
         }
     }
 }
