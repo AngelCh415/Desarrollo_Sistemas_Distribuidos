@@ -3,10 +3,10 @@ import java.io.*;
 import java.net.*;
 import javax.net.ssl.*;
 
-public class SecureMultiThreadedServer {
+public class Secure {
     private SSLServerSocket serverSocket;
 
-    public SecureMultiThreadedServer(int port) throws IOException {
+    public Secure(int port) throws IOException {
         SSLServerSocketFactory factory = (SSLServerSocketFactory) SSLServerSocketFactory.getDefault();
         serverSocket = (SSLServerSocket) factory.createServerSocket(port);
         serverSocket.setEnabledCipherSuites(serverSocket.getSupportedCipherSuites());
@@ -95,7 +95,7 @@ public class SecureMultiThreadedServer {
     }
 
     public static void main(String[] args) throws IOException {
-        SecureMultiThreadedServer server = new SecureMultiThreadedServer(8000);
+        Secure server = new Secure(8000);
         server.start();
     }
 }
