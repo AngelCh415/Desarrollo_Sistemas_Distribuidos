@@ -3,7 +3,7 @@ import java.util.Scanner;
 
 public class MatrixMultiplication {
     public static void main(String[] args) {
-        String validar = args[0];
+        String validar = "0";
         System.out.println("Validar: " + validar);
         if (validar.equals("0")) {
             Scanner sc = new Scanner(System.in);
@@ -38,10 +38,24 @@ public class MatrixMultiplication {
             double[][] B1 = Arrays.copyOfRange(Bt, 0, N/3);
             double[][] B2 = Arrays.copyOfRange(Bt, N/3, 2*N/3);
             double[][] B3 = Arrays.copyOfRange(Bt, 2*N/3, N);
+            //Mostrar A1, A2, A3, B1, B2 y B3
+            System.out.println("Matriz A1:");
+            printMatrix(A1);
+            System.out.println("Matriz A2:");
+            printMatrix(A2);
+            System.out.println("Matriz A3:");
+            printMatrix(A3);
+            System.out.println("Matriz B1:");
+            printMatrix(B1);
+            System.out.println("Matriz B2:");
+            printMatrix(B2);
+            System.out.println("Matriz B3:");
+            printMatrix(B3);
+
             // Matriz C
             double[][] C = new double[N][N];
             // Multiplicación de matrices
-            for (int i = 0; i < 3; i++) {
+            /*for (int i = 0; i < 3; i++) {
                 for (int j = 0; j < 3; j++) {
                     double[][] Ai = null;
                     double[][] Bj = null;
@@ -67,10 +81,22 @@ public class MatrixMultiplication {
                         }
                     }
                 }
-            }
+            }*/
+
+                double[][] SC1 = multiplyA1B123(A1, B1, B2, B3);
+                double[][] SC2 = multiplyA2B123(A2, B1, B2, B3);
+                double[][] SC3 = multiplyA3B123(A3, B1, B2, B3);
+                //Imprimir SC1, SC2 y SC3
+                System.out.println("Matriz SC1:");
+                printMatrix(SC1);
+                System.out.println("Matriz SC2:");
+                printMatrix(SC2);
+                System.out.println("Matriz SC3:");
+                printMatrix(SC3);
+
            //375708 es checksum para 12
     // Mostrar matrices y checksum de C
-        if (N == 12 || N > 0) {
+      /*    if (N == 12 || N > 0) {
             System.out.println("Matriz A:");
             printMatrix(A);
             System.out.println("Matriz B:");
@@ -82,7 +108,7 @@ public class MatrixMultiplication {
             System.out.println("Checksum de C: " + getChecksum(C));
         } else {
             System.out.println("N no es igual a 12 ni a 3000.");
-        }
+        }*/
         } else if (validar.equals("1")) {
             
         }
@@ -94,6 +120,83 @@ public class MatrixMultiplication {
         }
         System.out.println();
     }
+}
+
+
+public static double[][] multiplyA1B123(double[][] A1, double[][] B1, double[][] B2, double[][] B3) {
+    int N = A1[0].length;
+    double[][] C = new double[N / 3][N];
+        for (int j = 0; j < 3; j++) {
+            double[][] Ai = null;
+            double[][] Bj = null;
+            Ai = A1;
+            if (j == 0) {
+                Bj = B1;
+            } else if (j == 1) {
+                Bj = B2;
+            } else if (j == 2) {
+                Bj = B3;
+            }
+            for (int x = 0; x < N / 3; x++) {
+                for (int y = 0; y < N / 3; y++) {
+                    for (int k = 0; k < N; k++) {
+                        C[y][j] += Ai[x][k] * Bj[y][k];
+                    }
+                }
+            }
+        }
+    return C;
+}
+
+public static double[][] multiplyA2B123(double[][] A2, double[][] B1, double[][] B2, double[][] B3) {
+    int N = A2[0].length;
+    double[][] C = new double[N / 3][N];
+        for (int j = 0; j < 3; j++) {
+            double[][] Ai = null;
+            double[][] Bj = null;
+            Ai = A2;
+            if (j == 0) {
+                Bj = B1;
+            } else if (j == 1) {
+                Bj = B2;
+            } else if (j == 2) {
+                Bj = B3;
+            }
+            for (int x = 0; x < N / 3; x++) {
+                for (int y = 0; y < N / 3; y++) {
+                    for (int k = 0; k < N; k++) {
+                        C[y][j] += Ai[x][k] * Bj[y][k];
+                    }
+                }
+            }
+        
+    }
+    return C;
+}
+
+public static double[][] multiplyA3B123(double[][] A3, double[][] B1, double[][] B2, double[][] B3) {
+    int N = A3[0].length;
+    double[][] C = new double[N / 3][N];
+        for (int j = 0; j < 3; j++) {
+            double[][] Ai = null;
+            double[][] Bj = null;
+                Ai = A3;
+            if (j == 0) {
+                Bj = B1;
+            } else if (j == 1) {
+                Bj = B2;
+            } else if (j == 2) {
+                Bj = B3;
+            }
+            for (int x = 0; x < N / 3; x++) {
+                for (int y = 0; y < N / 3; y++) {
+                    for (int k = 0; k < N; k++) {
+                        C[y][j] += Ai[x][k] * Bj[y][k];
+                    }
+                }
+            }
+    }
+    return C;
 }
     public static double getChecksum(double[][] matrix) {
         double checksum = 0.0;
