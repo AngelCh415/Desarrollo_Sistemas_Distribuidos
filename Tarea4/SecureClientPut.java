@@ -1,62 +1,89 @@
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
 import java.net.Socket;
-import javax.net.ssl.SSLSocketFactory;
+import java.security.KeyStore;
+import java.security.SecureRandom;
+import java.security.Security;
+import javax.net.ssl.KeyManagerFactory;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSocket;
+import javax.net.ssl.TrustManagerFactory;
 
-public class SecureClientPut {
-    private final static String TRUSTSTORE_LOCATION = "serverkeystore.jks";
-    private final static String TRUSTSTORE_PASSWORD = "password";
-    private final static String SERVER_IP = "127.0.0.1";
-    private final static int SERVER_PORT = 8000;
+public class SecureClientPUT {
 
     public static void main(String[] args) {
-        // Obtener el nombre del archivo a enviar como argumento de línea de comando
-        if (args.length < 1) {
-            System.out.println("Debe proporcionar el nombre del archivo a enviar");
+
+        // Comprobamos que se han proporcionado los tres parámetros requeridos
+        if (args.length != 3) {
+            System.out.println("Debe proporcionar la dirección IP del servidor, el puerto y el nombre del archivo a enviar");
             return;
         }
-        String fileName = args[0];
+
+        // Recuperamos los parámetros proporcionados en la línea de comandos
+        String serverIP = args[0];
+        int serverPort = Integer.parseInt(args[1]);
+        String fileName = args[2];
 
         try {
-            // Configurar el socket SSL del cliente
-            System.setProperty("javax.net.ssl.trustStore", TRUSTSTORE_LOCATION);
-            System.setProperty("javax.net.ssl.trustStorePassword", TRUSTSTORE_PASSWORD);
-            SSLSocketFactory sslSocketFactory = (SSLSocketFactory) SSLSocketFactory.getDefault();
-            Socket socket = sslSocketFactory.createSocket(SERVER_IP, SERVER_PORT);
-
-            // Leer el archivo del disco local
+            // Leemos el archivo del disco local
             File file = new File(fileName);
-            if (!file.exists()) {
-                System.out.println("El archivo " + fileName + " no existe");
-                return;
-            }
-            FileInputStream fileInputStream = new FileInputStream(file);
+            FileInputStream fileInputStream = new FileInputStream(fileName);
             byte[] fileContent = new byte[(int) file.length()];
             fileInputStream.read(fileContent);
+            fileInputStream.close();
 
-            // Enviar la solicitud PUT al servidor
-            OutputStream outputStream = socket.getOutputStream();
-            PrintWriter printWriter = new PrintWriter(outputStream, true);
-            printWriter.println("PUT " + fileName);
-            printWriter.println(fileContent.length);
-            outputStream.write(fileContent);
-            outputStream.flush();
+            // Creamos un contexto SSL
+            SSLContext sslContext = SSLContext.getInstance("TLSv1.2");
 
-            // Leer la respuesta del servidor
-            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-            String response = bufferedReader.readLine();
+            // Creamos un key manager para que el cliente pueda identificarse ante el servidor
+            KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
+            keyStore.load(new FileInputStream("keystore.jks"), "password".toCharArray());
+            KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+            keyManagerFactory.init(keyStore, "password".toCharArray());
+
+            // Creamos un trust manager para que el cliente confíe en el servidor
+            TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+            trustManagerFactory.init(keyStore);
+
+            // Configuramos el contexto SSL con los key managers y trust managers creados anteriormente
+            sslContext.init(keyManagerFactory.getKeyManagers(), trustManagerFactory.getTrustManagers(), new SecureRandom());
+
+            // Creamos un socket SSL y nos conectamos al servidor
+            SSLSocket socket = (SSLSocket) sslContext.getSocketFactory().createSocket(serverIP, serverPort);
+
+            // Creamos un lector de mensajes entrantes y un escritor de mensajes salientes
+            BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            PrintWriter out = new PrintWriter(new OutputStreamWriter(socket.getOutputStream()), true);
+
+            // Enviamos la petición PUT al servidor
+            out.println("PUT " + fileName + " " + fileContent.length);
+            socket.getOutputStream().write(fileContent);
+            socket.getOutputStream().flush();
+
+            // Leemos la respuesta del servidor
+            String response = in.readLine();
+
+            // Cerramos los streams y el socket
+            in.close();
+            out.close();
+            socket.close();
+
+            // Si el servidor responde OK, mostramos un mensaje de éxito
             if (response.equals("OK")) {
-                System.out.println("El archivo " + fileName + " fue enviado con éxito al servidor");
+                System.out.println("El archivo se ha enviado con éxito al servidor");
             } else {
-                System.out.println("El servidor no pudo escribir el archivo " + fileName + " en el disco local");
+                System.out.println("El servidor no ha podido escribir el archivo en el disco local");
             }
 
-            // Cerrar el socket y los flujos de entrada y salida
-            fileInputStream.close();
-            outputStream.close();
-            bufferedReader.close();
-            socket.close();
         } catch (IOException ex) {
-            System.err.println(ex);
+            System.out.println("Ha ocurrido un error de entrada/salida: " + ex.getMessage());
+        } catch (Exception ex) {
+        System.out.println("Ha ocurrido un error: " + ex.getMessage());
         }
     }
 }

@@ -1,133 +1,164 @@
-import java.io.*;
-import java.net.*;
-import javax.net.ssl.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.PrintWriter;
+import java.net.Socket;
+import java.security.KeyStore;
+import java.security.SecureRandom;
+import java.security.Security;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.security.KeyStore;
+import javax.net.ssl.KeyManagerFactory;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLServerSocket;
+import javax.net.ssl.SSLServerSocketFactory;
+import javax.net.ssl.SSLSocket;
+import javax.net.ssl.TrustManagerFactory;
 
 public class SecureMultiThreadedServer {
+    
+    private final int port;
+    private final SSLServerSocket serverSocket;
+    private final ExecutorService threadPool;
 
-    private final static int PORT = 8000;
-    private final static String KEYSTORE_LOCATION = "serverkeystore.jks";
-    private final static String KEYSTORE_PASSWORD = "password";
-    private final static int THREAD_POOL_SIZE = 10;
-    private final static String FILES_DIRECTORY = "./";
+    public SecureMultiThreadedServer(int port, String keystoreFile, String keystorePassword) throws Exception {
+        this.port = port;
+        
+        // Configuración de SSL
+        KeyStore keyStore = KeyStore.getInstance("JKS");
+        keyStore.load(new FileInputStream(keystoreFile), keystorePassword.toCharArray());
 
+        KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance("SunX509");
+        keyManagerFactory.init(keyStore, keystorePassword.toCharArray());
+
+        TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance("SunX509");
+        trustManagerFactory.init(keyStore);
+
+        SSLContext sslContext = SSLContext.getInstance("TLSv1.2");
+        sslContext.init(keyManagerFactory.getKeyManagers(), trustManagerFactory.getTrustManagers(), null);
+
+        SSLServerSocketFactory sslServerSocketFactory = sslContext.getServerSocketFactory();
+        serverSocket = (SSLServerSocket) sslServerSocketFactory.createServerSocket(port);
+
+        // Configuración del pool de hilos
+        threadPool = Executors.newFixedThreadPool(10);
+    }
+    
+    public void start() {
+        System.out.println("Server is running on port " + port);
+        while (true) {
+            try {
+                // Esperar a que llegue una conexión entrante
+                Socket socket = serverSocket.accept();
+                
+                // Crear un nuevo hilo para manejar la conexión
+                ConnectionHandler handler = new ConnectionHandler(socket);
+                threadPool.submit(handler);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private class ConnectionHandler implements Runnable {
+        
+        private final Socket socket;
+
+        public ConnectionHandler(Socket socket) {
+            this.socket = socket;
+        }
+
+        @Override
+        public void run() {
+            try {
+                // Configuración del flujo de entrada
+                BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+
+                // Leer la petición del cliente
+                String request = reader.readLine();
+
+                // Dividir la petición en partes (GET/PUT, nombre del archivo, tamaño del archivo)
+                String[] parts = request.split(" ");
+                String method = parts[0];
+                String filename = parts[1];
+                int fileSize = 0;
+
+                if (method.equals("PUT")) {
+                    fileSize = Integer.parseInt(parts[2]);
+                }
+
+                // Configuración del flujo de salida
+                OutputStream out = socket.getOutputStream();
+                PrintWriter writer = new PrintWriter(out, true);
+
+                // Procesar la petición
+                if (method.equals("GET")) {
+                    // Leer el archivo del disco
+                    File file = new File(filename);
+                    if (file.exists() && file.isFile()) {
+                        FileInputStream fileInputStream = new FileInputStream(file);
+
+                        // Enviar respuesta al cliente
+                        writer.println("OK");
+                        writer.println(file.length());
+
+                        // Enviar el contenido del archivo al cliente
+                        byte[] buffer = new byte[4096];
+                        int bytesRead;
+                        while ((bytesRead = fileInputStream.read(buffer)) != -1) {
+                            out.write(buffer, 0, bytesRead);
+                        }
+
+                        fileInputStream.close();
+                    } else {
+                        // Enviar respuesta de error al cliente
+                        writer.println("ERROR");
+                    }
+                } else if (method.equals("PUT")) {
+                    // Escribir el archivo en el disco
+                    FileOutputStream fileOutputStream = new FileOutputStream(filename);
+                    byte[] buffer = new byte[4096];
+                    int bytesRead;
+                    int totalBytesRead = 0;
+                    while (totalBytesRead < fileSize && (bytesRead = socket.getInputStream().read(buffer)) != -1) {
+                        fileOutputStream.write(buffer, 0, bytesRead);
+                        totalBytesRead += bytesRead;
+                    }
+    
+                    fileOutputStream.close();
+    
+                    // Verificar que se haya escrito correctamente
+                    File file = new File(filename);
+                    if (file.exists() && file.isFile() && file.length() == fileSize) {
+                        // Enviar respuesta al cliente
+                        writer.println("OK");
+                    } else {
+                        // Enviar respuesta de error al cliente
+                        writer.println("ERROR");
+                    }
+                } else {
+                    // Enviar respuesta de error al cliente si la petición no es GET o PUT
+                    writer.println("ERROR");
+                }
+    
+                // Cerrar la conexión
+                socket.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+    
     public static void main(String[] args) {
         try {
-            SSLServerSocketFactory sslServerSocketfactory = getSSLServerSocketFactory();
-            SSLServerSocket sslServerSocket = (SSLServerSocket) sslServerSocketfactory.createServerSocket(PORT);
-            ExecutorService executor = Executors.newFixedThreadPool(THREAD_POOL_SIZE);
-            while (true) {
-                SSLSocket sslSocket = (SSLSocket) sslServerSocket.accept();
-                executor.execute(new RequestHandler(sslSocket));
-            }
+            SecureMultiThreadedServer server = new SecureMultiThreadedServer(8000, "keystore.jks", "password");
+            server.start();
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
-
-    private static SSLServerSocketFactory getSSLServerSocketFactory() throws Exception {
-        KeyStore keyStore = KeyStore.getInstance("JKS");
-        FileInputStream fileInputStream = new FileInputStream(KEYSTORE_LOCATION);
-        keyStore.load(fileInputStream, KEYSTORE_PASSWORD.toCharArray());
-        TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
-        trustManagerFactory.init(keyStore);
-        SSLContext sslContext = SSLContext.getInstance("TLSv1.2");
-        sslContext.init(null, trustManagerFactory.getTrustManagers(), null);
-        return sslContext.getServerSocketFactory();
-    }
-
-    private static class RequestHandler implements Runnable {
-        private final SSLSocket sslSocket;
-
-        public RequestHandler(SSLSocket sslSocket) {
-            this.sslSocket = sslSocket;
-        }
-
-        public void run() {
-            try {
-                BufferedReader input = new BufferedReader(new InputStreamReader(sslSocket.getInputStream()));
-                BufferedWriter output = new BufferedWriter(new OutputStreamWriter(sslSocket.getOutputStream()));
-                String request = input.readLine();
-                String[] requestParts = request.split(" ");
-                String requestType = requestParts[0];
-                String fileName = requestParts[1];
-
-                switch (requestType) {
-                    case "GET":
-                        handleGetRequest(fileName, output);
-                        break;
-                    case "PUT":
-                        int fileSize = Integer.parseInt(requestParts[2]);
-                        handlePutRequest(fileName, fileSize, input, output);
-                        break;
-                    default:
-                        output.write("ERROR: Invalid request type");
-                        output.newLine();
-                        break;
-                }
-                input.close();
-                output.close();
-                sslSocket.close();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-
-        private void handleGetRequest(String fileName, BufferedWriter output) throws IOException {
-            String filePath = FILES_DIRECTORY + fileName;
-            File file = new File(filePath);
-            if (file.exists() && !file.isDirectory()) {
-                String fileContent = readFileContent(file);
-                output.write("OK " + file.length());
-                output.newLine();
-                output.write(fileContent);
-                output.newLine();
-            } else {
-                output.write("ERROR: File not found");
-                output.newLine();
-            }
-        }
-
-        private void handlePutRequest(String fileName, int fileSize, BufferedReader input, BufferedWriter output) throws IOException {
-            String filePath = FILES_DIRECTORY + fileName;
-            File file = new File(filePath);
-            if (file.exists() && !file.isDirectory()) {
-                output.write("ERROR: File already exists");
-                output.newLine();
-            } else {
-                FileWriter fileWriter = new FileWriter(file);
-                char[] buffer = new char[1024];
-                int bytesRead;
-                while (            fileSize > 0 && (bytesRead = input.read(buffer, 0, Math.min(buffer.length, fileSize))) != -1) {
-                fileWriter.write(buffer, 0, bytesRead);
-                fileSize -= bytesRead;
-            }
-            fileWriter.close();
-            if (fileSize == 0) {
-                output.write("OK");
-                output.newLine();
-            } else {
-                file.delete();
-                output.write("ERROR: File upload failed");
-                output.newLine();
-            }
-        }
-    }
-
-    private String readFileContent(File file) throws IOException {
-        BufferedReader reader = new BufferedReader(new FileReader(file));
-        StringBuilder stringBuilder = new StringBuilder();
-        String line;
-        while ((line = reader.readLine()) != null) {
-            stringBuilder.append(line);
-            stringBuilder.append("\n");
-        }
-        reader.close();
-        return stringBuilder.toString();
-    }
 }
-}
-
-
