@@ -75,7 +75,7 @@ public class SecureClientPUT {
 
             // Si el servidor responde OK, mostramos un mensaje de éxito
             if (response.equals("OK")) {
-                System.out.println("El archivo se ha enviado con éxito al servidor");
+                System.out.println("El archivo se ha enviado con exito al servidor");
             } else {
                 System.out.println("El servidor no ha podido escribir el archivo en el disco local");
             }

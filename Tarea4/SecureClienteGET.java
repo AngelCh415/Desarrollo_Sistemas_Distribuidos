@@ -77,7 +77,7 @@ public class SecureClienteGET {
                 }
                 fileOut.close();
 
-                System.out.println("El archivo " + fileName + " se recibió con éxito.");
+                System.out.println("El archivo " + fileName + " se recibio con exito.");
             }
 
             // Cierre del socket

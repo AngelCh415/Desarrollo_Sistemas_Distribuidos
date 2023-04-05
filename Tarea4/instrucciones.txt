@@ -1,1 +1,3 @@
-hola
+Servidor con sockets seguros
+2 clientes se contectan. Si la peticion es GET se busca en el servidor si esta esta el archivo y si esta se envia.
+Si la peticion es PUT se envia el archivo al servidor
