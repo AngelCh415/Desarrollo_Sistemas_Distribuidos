@@ -12,7 +12,9 @@ public class ClienteRMI {
     private static final int M = 4;
     private static final int PARTES = 81;
     private static final String RMI_URL = "rmi://localhost/";
-    private static final String RMI_NOMBRE_SERVICIO = "ServicioMultiplicacionMatricesImpl";
+    private static final String RMI_URL1 = "rmi://localhost/";
+    private static final String RMI_URL2 = "rmi://localhost/";
+    private static final String RMI_NOMBRE_SERVICIO =   "ServicioMultiplicacionMatrices";
     private static final String RMI_NOMBRE_OBJETO = "objetoMultiplicacionMatrices";
     
     public static void main(String[] args) {
@@ -20,7 +22,7 @@ public class ClienteRMI {
         try {
             // Inicializar A y B
             float[][] A = new float[N][M];
-            float[][] B = new float[M][N];
+            float[][] B = new float[N][M];
             
             for (int i = 0; i < N; i++) {
                 for (int j = 0; j < M; j++) {
@@ -28,16 +30,16 @@ public class ClienteRMI {
                 }
             }
             
-            for (int i = 0; i < M; i++) {
-                for (int j = 0; j < N; j++) {
+            for (int i = 0; i < N; i++) {
+                for (int j = 0; j < M; j++) {
                     B[i][j] = 3 * i - 2 * j;
                 }
             }
             
             // Obtener Bt
-            float[][] Bt = new float[N][M];
-            for (int i = 0; i < N; i++) {
-                for (int j = 0; j < M; j++) {
+            float[][] Bt = new float[M][N];
+            for (int i = 0; i < M; i++) {
+                for (int j = 0; j < N; j++) {
                     Bt[i][j] = B[j][i];
                 }
             }
@@ -62,16 +64,16 @@ public class ClienteRMI {
                         objetosRemotos[i] = (ServicioMultiplicacionMatricesImpl) registry0.lookup(RMI_URL + RMI_NOMBRE_SERVICIO);
                         break;
                     case 1:
-                        objetosRemotos[i] = (ServicioMultiplicacionMatricesImpl) registry1.lookup(RMI_URL + RMI_NOMBRE_SERVICIO);
+                        objetosRemotos[i] = (ServicioMultiplicacionMatricesImpl) registry1.lookup(RMI_URL1 + RMI_NOMBRE_SERVICIO);
                         break;
                     case 2:
-                        objetosRemotos[i] = (ServicioMultiplicacionMatricesImpl) registry2.lookup(RMI_URL + RMI_NOMBRE_SERVICIO);
+                        objetosRemotos[i] = (ServicioMultiplicacionMatricesImpl) registry2.lookup(RMI_URL2 + RMI_NOMBRE_SERVICIO);
                         break;
                 }
             }
             // Multiplicar las matrices Ai y Bti en paralelo utilizando threads
                 List<Thread> threads = new ArrayList<>();
-                float [][] C = new float [N][M];
+                float [][] C = new float [N][N];
                 for (int i = 0; i < PARTES; i++) {
                     int finalI = i;
                     Thread thread = new Thread(() -> {
@@ -101,11 +103,13 @@ public class ClienteRMI {
                         e.printStackTrace();
                     }
                 }
-                for (int fila = 0; fila < N; fila++) {
-                    for (int columna = 0; columna < M; columna++) {
-                        System.out.print(C[fila][columna] + " ");
+                if(N == 9 && M == 4){
+                    for (int fila = 0; fila < N; fila++) {
+                        for (int columna = 0; columna < M; columna++) {
+                            System.out.print(C[fila][columna] + " ");
+                        }
+                        System.out.println();
                     }
-                    System.out.println();
                 }
                 // Calcular el checksum global
                 float checksumGlobal = calcularChecksumGlobal(checksums);
