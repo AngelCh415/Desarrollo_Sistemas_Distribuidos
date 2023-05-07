@@ -2,8 +2,8 @@ import java.rmi.Naming;
 
 public class ClienteRMI {
     public static void main(String[] args) throws Exception {
-        int N = 4;
-        int M = 6;
+        int N = Integer.parseInt(args[0]);
+        int M = Integer.parseInt(args[1]);
 
         float[][] A = new float[N][M];
         float[][] B = new float[M][N];

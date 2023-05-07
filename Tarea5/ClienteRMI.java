@@ -14,7 +14,7 @@ public class ClienteRMI {
     private static final String RMI_URL = "rmi://localhost/";
     private static final String RMI_URL1 = "rmi://localhost/";
     private static final String RMI_URL2 = "rmi://localhost/";
-    private static final String RMI_NOMBRE_SERVICIO =   "ServicioMultiplicacionMatrices";
+    private static final String RMI_NOMBRE_SERVICIO =  "servicioMultiplicacionMatrices";
     private static final String RMI_NOMBRE_OBJETO = "objetoMultiplicacionMatrices";
     
     public static void main(String[] args) {
@@ -48,26 +48,24 @@ public class ClienteRMI {
             List<float[][]> AiList = partirMatriz(A);
             List<float[][]> BtiList = partirMatriz(Bt);
             // Declarar arreglo para almacenar checksums de cada parte
-        long[] checksums = new long[PARTES];
+            long[] checksums = new long[PARTES];
             // Inicializar el arreglo de objetos remotos
             ServicioMultiplicacionMatricesImpl[] objetosRemotos = new ServicioMultiplicacionMatricesImpl[PARTES];
             
             // Registrar el objeto remoto en los servidores RMI
-            Registry registry0 = LocateRegistry.getRegistry("localhost", 1099);
-            Registry registry1 = LocateRegistry.getRegistry("localhost", 1100);
-            Registry registry2 = LocateRegistry.getRegistry("localhost", 1101);
+            
             
             for (int i = 0; i < PARTES; i++) {
                 int nodo = i % 3;
                 switch (nodo) {
                     case 0:
-                        objetosRemotos[i] = (ServicioMultiplicacionMatricesImpl) registry0.lookup(RMI_URL + RMI_NOMBRE_SERVICIO);
+                        objetosRemotos[i] = (ServicioMultiplicacionMatricesImpl) Naming.lookup(RMI_URL + RMI_NOMBRE_SERVICIO);
                         break;
                     case 1:
-                        objetosRemotos[i] = (ServicioMultiplicacionMatricesImpl) registry1.lookup(RMI_URL1 + RMI_NOMBRE_SERVICIO);
+                        objetosRemotos[i] = (ServicioMultiplicacionMatricesImpl) Naming.lookup(RMI_URL1 + RMI_NOMBRE_SERVICIO);
                         break;
                     case 2:
-                        objetosRemotos[i] = (ServicioMultiplicacionMatricesImpl) registry2.lookup(RMI_URL2 + RMI_NOMBRE_SERVICIO);
+                        objetosRemotos[i] = (ServicioMultiplicacionMatricesImpl) Naming.lookup(RMI_URL2 + RMI_NOMBRE_SERVICIO);
                         break;
                 }
             }
