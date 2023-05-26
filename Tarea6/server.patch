@@ -1,0 +1,12 @@
+--- server.xml	2023-05-07 18:53:45.686193223 -0600
++++ server.xml	2023-05-07 19:00:52.826175450 -0600
+@@ -173,7 +173,8 @@
+         <Valve className="org.apache.catalina.valves.AccessLogValve" directory="logs"
+                prefix="localhost_access_log" suffix=".txt"
+                pattern="%h %l %u %t &quot;%r&quot; %s %b" />
+-
++	<Context path="" docBase="myAPP"/>
++	<Context path="ROOT" docBase="ROOT"/>
+       </Host>
+     </Engine>
+   </Service>
