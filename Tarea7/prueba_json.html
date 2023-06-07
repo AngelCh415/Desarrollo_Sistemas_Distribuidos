@@ -1,0 +1,160 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" charset="utf-8">
+	<meta name="author" content="Carlos Pineda Guerrero, abril 2023">
+	<script src='/WSClient.js'></script>
+	<script>
+		var URL = "/Servicio/rest/ws";
+
+		var foto = null;  // por default la foto es nula
+		function get(id)
+		{
+			return document.getElementById(id);
+		}
+		function muestra(id)
+		{
+			get(id).style.display = "block";
+		}
+
+		function oculta(id)
+		{
+			get(id).style.display = "none";
+		}
+		function muestra_pantalla(id)
+		{
+			oculta("menu");
+			muestra(id);
+		}
+		function oculta_pantalla(id)
+		{
+			oculta(id);
+			muestra("menu");
+		}
+		function readSingleFile(files, imagen)
+		{
+			var file = files[0];
+			if (!file) return;
+			var reader = new FileReader();
+			reader.onload = function (e)
+			{
+				imagen.src = reader.result;
+				// reader.result incluye al principio: "data:image/jpeg;base64,"
+				foto = reader.result.split(',')[1];
+			};
+			reader.readAsDataURL(file);
+		}
+		function limpia_alta()
+		{
+			get("alta_nombre").value = "";
+			get("alta_descripcion").value = "";
+			get("alta_precio").value = "";
+			get("alta_cantidad").value = "";
+			get("alta_imagen").src = "/usuario_sin_foto.png";
+			foto = null;
+		}
+		function alta()
+		{
+			var cliente = new WSClient(URL);
+			var articulo = {
+				nombre: get("alta_nombre").value,
+				descripcion: get("alta_descripcion").value,
+				precio: get("alta_precio").value,
+				cantidad: get("alta_cantidad").value,
+				foto: foto
+			};
+			cliente.postJson(
+				"alta_articulo",
+				{
+					articulo: articulo
+				},
+				function (code, result)
+				{
+					if (code == 200)
+						alert("OK");
+					else
+						alert(JSON.stringify(result));
+				}
+			);
+		}
+		function limpia_compra()
+		{
+			get("compra_palabra").value = "";
+			get("compra_resultados").innerHTML = "";
+		}
+		function compra()
+		{
+			var cliente = new WSClient(URL);
+			var palabra = get("compra_palabra").value;
+			cliente.postJson(
+				"compra_articulos",
+				{
+					palabra: palabra
+				},
+				function (code, result)
+				{
+					if (code == 200)
+					{
+						var resultados = result.resultados;
+						var html = "";
+						for (var i = 0; i < resultados.length; i++)
+						{
+							var item = resultados[i];
+							html += "<div>";
+							html += "<img src='" + item.foto + "' width='100px' />";
+							html += "<h3>" + item.nombre + "</h3>";
+							html += "<p>Precio: " + item.precio + "</p>";
+							html += "</div>";
+						}
+						get("compra_resultados").innerHTML = html;
+					}
+					else
+					{
+						alert(JSON.stringify(result));
+					}
+				}
+			);
+		}
+	</script>
+	<style>
+		#alta, #compra {
+			display: none;
+		}
+	</style>
+</head>
+<body>
+	<div id="menu">
+		<button onclick="muestra_pantalla('alta')">Alta de artículo</button>
+		<button onclick="muestra_pantalla('compra')">Compra de artículos</button>
+	</div>
+
+	<div id="alta">
+		<h2>Alta de artículo</h2>
+		<label for="alta_nombre">Nombre:</label>
+		<input type="text" id="alta_nombre"><br>
+		<label for="alta_descripcion">Descripción:</label>
+		<input type="text" id="alta_descripcion"><br>
+		<label for="alta_precio">Precio:</label>
+		<input type="text" id="alta_precio"><br>
+		<label for="alta_cantidad">Cantidad:</label>
+		<input type="text" id="alta_cantidad"><br>
+		<label for="alta_imagen">Imagen:</label>
+		<input type="file" id="alta_imagen" onchange="readSingleFile(this.files, get('alta_imagen'))">
+		<br>
+		<button onclick="alta()">Dar de alta</button>
+		<button onclick="limpia_alta()">Limpiar</button>
+		<button onclick="oculta_pantalla('alta')">Volver</button>
+	</div>
+
+	<div id="compra">
+		<h2>Compra de artículos</h2>
+		<label for="compra_palabra">Palabra clave:</label>
+		<input type="text" id="compra_palabra"><br>
+		<button onclick="compra()">Buscar</button>
+		<button onclick="limpia_compra()">Limpiar</button>
+		<button onclick="oculta_pantalla('compra')">Volver</button>
+		<div id="compra_resultados"></div>
+	</div>
+</body>
+</html>
+
