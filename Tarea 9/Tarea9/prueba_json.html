@@ -78,23 +78,17 @@
 			}
 			function limpia_consulta()
 			{
-				get("consulta_email").value = "";
 				get("consulta_nombre").value = "";
-				get("consulta_apellido_paterno").value = "";
-				get("consulta_apellido_materno").value = "";
-				get("consulta_fecha_nacimiento").value = "";
-				get("consulta_telefono").value = "";
-				get("consulta_genero").value = "";
+				get("consulta_descripcion").value = "";
+				get("consulta_precio").value = "";
 				get("consulta_imagen").src = "/api/Get?nombre=/usuario_sin_foto.png";
 			}
 			function cierra_pantalla_consulta()
 			{
-				oculta_pantalla('consulta_usuario');
+				oculta_pantalla('consulta_producto');
 				muestra("encabezado_consulta");
 				muestra("boton_consulta");
-				oculta("encabezado_modifica");
 				oculta("modifica_usuario");
-				get("consulta_email").readOnly = false;
 			}
 			function quita_foto()
 			{
@@ -105,33 +99,112 @@
 			function consulta()
 			{
 				var cliente = new WSClient(URL);
-				cliente.postJson("consulta_usuario",
+				cliente.postJson("consulta_producto",
 				{
 					// se debe pasar como parametro el email del usuario a consultar
 					// si el usuario no existe regresa un error
-					email: get("consulta_email").value
+					nombre: get("consulta_nombre").value,
+					descripcion: get("consulta_descripcion").value
 				},
 				function(code,result)
 				{
 					if (code == 200)
 					{
 						limpia_consulta();
-						get("consulta_email").value = result.email;
-						get("consulta_nombre").value = result.nombre;
-						get("consulta_apellido_paterno").value = result.apellido_paterno;
-						get("consulta_apellido_materno").value = result.apellido_materno != null ? result.apellido_materno : "";
-						get("consulta_fecha_nacimiento").value = new Date(result.fecha_nacimiento+"Z").toLocaleString("sv-SE").replace(" ","T");
-						get("consulta_telefono").value = result.telefono != null ? result.telefono : "";
-						get("consulta_genero").value = result.genero == "M" ? "Masculino" : result.genero == "F" ? "Femenino" : "";
 						foto = result.foto;
-                                                get("consulta_imagen").src = foto != null ? "data:image/jpeg;base64," + foto : "/api/Get?nombre=/usuario_sin_foto.png"
-
 						oculta("encabezado_consulta");
 						muestra("encabezado_modifica");
 						muestra("modifica_usuario");
 						oculta("boton_consulta");
-						get("consulta_email").readOnly = true;
-					}
+						// Agregar tabla para mostrar los artículos
+						var tabla = document.createElement("table");
+						// Encabezados de columna
+						var encabezado = document.createElement("tr");
+						var encabezadoNombre = document.createElement("th");
+						encabezadoNombre.innerHTML = "Nombre";
+						var encabezadoPrecio= document.createElement("th");
+						encabezadoPrecio.innerHTML = "Precio";
+						var encabezadoCompra = document.createElement("th");
+						encabezadoCompra.innerHTML = "Comprar";
+						var encabezadoCantidad = document.createElement("th");
+						encabezadoCantidad.innerHTML = "Cantidad";
+						var encabezadoDescripcionBoton = document.createElement("th");
+						encabezadoDescripcionBoton.innerHTML = "Descripción";
+						var encabezadoFoto = document.createElement("th");
+						encabezadoFoto.innerHTML = "Foto";
+						encabezado.appendChild(encabezadoNombre);
+						encabezado.appendChild(encabezadoPrecio);
+						encabezado.appendChild(encabezadoCompra);
+						encabezado.appendChild(encabezadoCantidad);
+						encabezado.appendChild(encabezadoDescripcionBoton);
+						encabezado.appendChild(encabezadoFoto);
+						tabla.appendChild(encabezado);
+
+						// Filas de artículo
+						var filaArticulo = document.createElement("tr");
+
+						// Celda de nombre
+						var celdaNombre = document.createElement("td");
+						celdaNombre.innerHTML = result.nombre;
+						filaArticulo.appendChild(celdaNombre);
+
+						// Celda de precio
+						var celdaPrecio = document.createElement("td");
+						celdaPrecio.innerHTML = result.precio;
+						filaArticulo.appendChild(celdaPrecio);
+
+						// Celda de compra
+						var celdaCompra = document.createElement("td");
+						var compraButton = document.createElement("button");
+						compraButton.innerHTML = "Comprar";
+						compraButton.onclick = function() {
+							// Acción a realizar al hacer clic en el botón de compra
+						};
+						celdaCompra.appendChild(compraButton);
+						filaArticulo.appendChild(celdaCompra);
+
+						// Celda de cantidad
+						var celdaCantidad = document.createElement("td");
+						var cantidadInput = document.createElement("input");
+						cantidadInput.type = "number";
+						cantidadInput.value = "1"; // Cantidad predeterminada
+						celdaCantidad.appendChild(cantidadInput);
+						filaArticulo.appendChild(celdaCantidad);
+						// Celda de descripción (botón)
+						var celdaDescripcionBoton = document.createElement("td");
+						var descripcionButton = document.createElement("button");
+						descripcionButton.innerHTML = "Descripción";
+						descripcionButton.onclick = function() {
+							// Mostrar ventana emergente con la descripción del artículo
+							var descripcionPopup = window.open("", "Descripción", "width=400,height=300");
+							descripcionPopup.document.write("<h2>Descripción del artículo</h2>");
+							descripcionPopup.document.write("<p>" + result.descripcion + "</p>");
+
+							// Agregar botón de cerrar en la ventana emergente
+							var cerrarButton = descripcionPopup.document.createElement("button");
+							cerrarButton.innerHTML = "Cerrar";
+							cerrarButton.onclick = function() {
+								descripcionPopup.close();
+							};
+							descripcionPopup.document.body.appendChild(cerrarButton);
+						};
+						celdaDescripcionBoton.appendChild(descripcionButton);
+						filaArticulo.appendChild(celdaDescripcionBoton);
+
+						// Celda de foto
+						var celdaFoto = document.createElement("td");
+						var fotoElement = document.createElement("img");
+						fotoElement.src = foto != null ? "data:image/jpeg;base64," + foto : "/usuario_sin_foto.png";
+						celdaFoto.appendChild(fotoElement);
+						filaArticulo.appendChild(celdaFoto);
+
+						tabla.appendChild(filaArticulo);
+
+						// Agregar la tabla al contenedor adecuado en tu HTML
+						var contenedorTabla = document.getElementById("tabla-container");
+						contenedorTabla.appendChild(tabla);
+
+						}
 					else
 						// el objeto "result" es de tipo Error
 						alert(JSON.stringify(result));
@@ -205,50 +278,39 @@
 			<button type="button" onclick="limpia_alta()" style="width:250px;height:40px">Limpiar pantalla</button></br>
 			<button type="button" onclick="oculta_pantalla('alta_producto')" style="width:250px;height:40px">Regresar</button></br>
 		</div>
-
-		<div id="consulta_usuario" style="display:none">
+		<div id="carrito_compra" style="display:none">
 			<div id="encabezado_consulta">
-				<h2 style="text-align:center">Consulta usuario</h2>
+				<h2 style="text-align:center">Carrito de compras</h2>
 			</div>
 			<div id="encabezado_modifica" style="display:none">
 				<h2 style="text-align:center">Modifica usuario</h2>
 			</div>
-			Email *<br>
-			<input type="email" id="consulta_email" value="" style="width:250px"/><br>
+			Nombre *<br>
+			<input type="email" id="consulta_nombre" value="" style="width:250px"/><br>
+			Descripcion * <br>
+			<input type="text" id="consulta_descripcion" value="" style="width:250px" /></br>
 			<div id="modifica_usuario" style="display:none">
-				Nombre *<br>
-				<input type="text" id="consulta_nombre" value="" style="width:250px"/><br>
-				Apellido paterno *<br>
-				<input type="text" id="consulta_apellido_paterno" value="" style="width:250px"/><br>
-				Apellido materno<br>
-				<input type="text" id="consulta_apellido_materno" value="" style="width:250px"/><br>
-				Fecha de nacimiento *<br>
-				<input type="datetime-local" id="consulta_fecha_nacimiento" value="" style="width:250px"/><br>
-				Teléfono<br>
-				<input type="number" id="consulta_telefono" value="" style="width:250px"/><br>
-				Genero<br>
-				<select id="consulta_genero" style="width:250px">
-					<option></option>
-					<option>Masculino</option>
-					<option>Femenino</option>
-				</select>
+				Nombre <br>
+				<label type="text" id="consulta_nombre" value="" style="width:250px"><br>
+				Precio <br>
+				<label type="text" id="consulta_precio" value="" style="width:250px"><br>
 				<br>
 				<br>
-				<img id="consulta_imagen" width="100px" src="/api/Get?nombre=/usuario_sin_foto.png"></img>
+				<img id="consulta_imagen" width="100px" src="/usuario_sin_foto.png"></img>
 				<input type="file" id="consulta_file" onchange="readSingleFile(files,get('consulta_imagen'))" multiple="false" accept="image/*"/><br>
-				<button onclick="quita_foto()">Quitar foto</button><br>
 				<br>
-				<button type="button" onclick="modifica()" style="width:250px;height:40px">Guardar cambios</button></br>
 		</div>
 			<div id="boton_consulta">
 				<br>
-				<button type="button" onclick="consulta()" style="width:250px;height:40px">Buscar usuario</button></br>
+				<button type="button" onclick="consulta()" style="width:250px;height:40px">Buscar producto</button></br>
 			</div>
 			<button type="button" onclick="cierra_pantalla_consulta()" style="width:250px;height:40px">Regresar</button></br>
 		</div>
+		<div id="tabla-container">
+		</div>
 		<div id="menu">
 			<button type="button" onclick="limpia_alta();muestra_pantalla('alta_producto')" style="width:250px;height:40px">Alta producto</button></br>
-			<button type="button" onclick="limpia_consulta();muestra_pantalla('consulta_usuario')" style="width:250px;height:40px">Consulta usuario</button></br>
+			<button type="button" onclick="muestra_pantalla('carrito_compra')" style="width:250px;height:40px">Carrito de compra</button></br>
 		</div>
 	</div>
 	</body>
